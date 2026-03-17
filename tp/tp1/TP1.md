@@ -44,13 +44,5 @@ On a 3 cas :
 
 &nbsp;  
 ## Exercice 5 - CUDA convolution kernel
-In this exercise, you will write a simple 1D convolution kernel that performs the operation y[i] = (x[i −1] + x[i] +
-x[i + 1])/3.0 for vectors x, y of size N and for all 1 ≤i < N (and set y[0] = x[0], y[N −1] = x[N −1]). You will write
-multiple kernels that perform this operation:
-a) First, a kernel that only launches blocks, and one thread per block, each block working on one vector element
-b) Another kernel that uses a certain number of threads (multiple of 32) per block, each thread working on one
-vector element
-c) Finally, a kernel that uses a certain number of threads per block, each thread working on K elements of the
-vector, where K is a compile-time constant/macro (e.g., #define K 8)
-In doing these operations, you should also perform necessary memory copies at appropriate places as indicated in the
-provided skeleton code convolution.cu.
+Même chose que pour l'exercice 4, mais avec la formule de convolution : `y[i] = (x[i - 1] + x[i] + x[i + 1]) / 3.0f;` pour `1 <= i < N-1`, et `y[0] = x[0];` et `y[N-1] = x[N-1];`.  
+On voit qu'on peut faire une moyenne glissante malgré la division en blocs, car chaque thread peut accéder à la mémoire globale pour lire les éléments nécessaires à la convolution. Cependant, il faut faire attention aux conditions de bord, et s'assurer que les threads qui traitent les éléments aux extrémités du tableau ne tentent pas d'accéder à des indices hors limites.  
