@@ -34,15 +34,12 @@ Les ids corrects sont `idx = blockIdx.x * blockDim.x + threadIdx.x;`
 
 &nbsp;  
 ## Exercice 4 - CUDA saxpy kernel
-In this exercise, you will write a saxpy BLAS kernel that performs thte operation y = ax + y for vectors x, y of size N
-and the scalar a. You will write multiple kernels that perform this operation:
-a) First, a kernel that only launches blocks, and one thread per block, each block working on one vector element
-b) Another kernel that uses a certain number of threads (multiple of 32) per block, each thread working on one
-vector element
-c) Finally, a kernel that uses a certain number of threads per block, each thread working on K elements of the
-vector.
-In doing these operations, you should also perform necessary memory copies at appropriate places as indicated in the
-provided skeleton code saxpy.cu.
+On a 3 cas :
+- pour 1 thread par block et une opération par thread, on fait simplement `y[idx] = a * x[idx] + y[idx];` dans le kernel, et on lance `numBlocks = (N + blockSize - 1) / blockSize;` blocks avec `blockSize = 1;`
+- pour un certain nombre de threads par block et une opération par thread, on fait la même chose, mais en utilisant `blockSize` threads par block, et en lançant `numBlocks = (N + blockSize - 1) / blockSize;` blocks
+- pour un certain nombre de threads par block et K opérations par thread, on fait `y[i] = a * x[i] + y[i];` pour `i` allant de `start` à `end`, où `start = idx * k;` et `end = min(start + k, N);`, et on lance `numBlocks = (N + blockSize * k - 1) / (blockSize * k);` blocks avec `blockSize` threads par block et `k` opérations par thread.
+
+
 
 
 &nbsp;  
