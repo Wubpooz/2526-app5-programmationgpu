@@ -28,14 +28,8 @@ On peut voir que les threads sont regroupés par block, et que les threads d'un 
 
 &nbsp;  
 ## Exercice 3 - Writing a GPU-GPU memcpy kernel
-In this exercise, you will write your own memcpy kernel to copy a GPU array into another GPU array. You will use
-this to perform the memory transfer A[N] -> dA[N] -> dB[N] -> B[N], where A[N], B[N] are CPU arrays and dA[N],
-dB[N] are their GPU counterparts. You should use the given skeleton code cuda-copy-kernel.cu for this exercise.
-
-a) First, complete the provided kernels cudaCopyByBlocks and cudaCopyByBlocksThreads.
-b) Then, perform the necessary memory allocations for dA[N] and dB[N], then do the memory transfers using
-cudaCopyByBlocks kernel, as demanded in the skeleton code’s comments.
-c) Finally, do the same but using the cudaCopyByBlocksThreads kernel this time.
+On utilise a nouveaux `cudaMemcpy` (with `cudaMemcpyHostToDevice` and `cudaMemcpyDeviceToHost`), `cudaMalloc` et `cudaFree` pour allouer et libérer la mémoire sur le GPU, et pour copier les données entre les tableaux sur le GPU. 
+Les ids corrects sont `idx = blockIdx.x * blockDim.x + threadIdx.x;`
 
 
 &nbsp;  
