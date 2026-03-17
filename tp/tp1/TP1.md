@@ -22,3 +22,5 @@ On peut voir que les threads sont regroupés par block, et que les threads d'un 
 ## Exercice 2 - Addition de vecteurs
 1) static copy:
 ![alt text](img/exo2_static.png)
+2) dynamic copy:
+![alt text](img/exo2_dynamic.png)

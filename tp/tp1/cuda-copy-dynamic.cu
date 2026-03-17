@@ -15,25 +15,21 @@ int main(int argc, char **argv) {
   N = atoi(argv[1]);
 
   // Initialization
-  // Initialisation
   A = (float *) malloc(sizeof(float) * N);
   B = (float *) malloc(sizeof(float) * N);
   for (i = 0; i < N; i++) { A[i] = (float)i; }
   
   // Allocate the dynamic float array dA[N] on the GPU using cudaMalloc
-  // Allouer le tableau dA dynamique de taille N sur le GPU avec cudaMalloc 
-  // TODO / A FAIRE ...
+  cudaMalloc((void **) &dA, sizeof(float) * N);
 
   // cudaMemcpy from A[N] to dA[N]
-  // cudaMemcpy de A[N] vers dA[N]
-  // TODO / A FAIRE ...
-
+  cudaMemcpy(dA, A, sizeof(float) * N, cudaMemcpyHostToDevice);
+ 
   // cudaMemcpy from dA[N} to B[N]
-  // cudaMemcpy de dA[N] vers B[N]
-  // TODO / A FAIRE ...
+  cudaMemcpy(B, dA, sizeof(float) * N, cudaMemcpyDeviceToHost);
 
   // Desaollouer le tableau dA[N] sur le GPU
-  // TODO / A FAIRE ...
+  cudaFree(dA);
 
   // Attendre que les kernels GPUs terminent
   cudaError_t cudaerr = cudaDeviceSynchronize();
@@ -42,7 +38,6 @@ int main(int argc, char **argv) {
   }
 
   // Verify the result
-  // Verifier le resultat
   for (i = 0; i < N; i++) { if (A[i] != B[i]) { break; } }
   if (i < N) { cout << "La copie est incorrecte!\n"; }
   else { cout << "La copie est correcte!\n"; }
