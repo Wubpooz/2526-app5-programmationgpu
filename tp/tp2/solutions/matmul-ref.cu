@@ -71,8 +71,8 @@ __global__ void multiplyMatrixGPUByBlocksThreads1DNonMultiple(float *dA, float *
 __global__ void multiplyMatrixGPUByBlocksThreads2D(float *dA, float *dB, float *dC, int n)
 {
   // TODO / A FAIRE ...
-  int i = threadIdx.x + blockIdx.x * blockDim.x;
-  int j = threadIdx.y + blockIdx.y * blockDim.y;
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int j = blockIdx.y * blockDim.y + threadIdx.y;
   float c = 0.0;
   for (int k = 0; k < n; k++) { c += dA[i * n + k] * dB[k + j * n]; }
   dC[i * n + j] = c;
