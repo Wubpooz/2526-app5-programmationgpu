@@ -67,13 +67,20 @@ Use small stride in the fastest-varying dimension of row-major data to keep acce
 
 To check coalescence issues, **observe where warp 0 accesses the memory** to quickly identify problems or confirm good behavior. The values of `i` and `j` for warp 0 (threads 0-31) should be contiguous in memory for good coalescence.  
 Example:  
-```cpp
-int i = blockIdx.y * blockDim.y + threadIdx.y; // row index
-int j = blockIdx.x * blockDim.x + threadIdx.x; // column index
-```
-- For the warp 0, `i = 0 * blockDim.y + 0 = 0` and `j = 0 * blockDim.x + 0..31 = 0..31`, so threads 0-31 access `A[0][0..31]` which is **contiguous** in row-major order, ensuring coalescence.  
-- Then for warp 1 (threads 32-63), `i = 0 * blockDim.y + 1 = 1` and `j = 0 * blockDim.x + 0..31 = 0..31`, so threads 32-63 access `A[1][0..31]`, which is also contiguous, maintaining coalescence across warps.
-
+- Coalescent: 
+  ```cpp
+  int i = blockIdx.y * blockDim.y + threadIdx.y; // row index
+  int j = blockIdx.x * blockDim.x + threadIdx.x; // column index
+  ```
+  - For the warp 0, `i = 0 * blockDim.y + 0 = 0` and `j = 0 * blockDim.x + 0..31 = 0..31`, so threads 0-31 access `A[0][0..31]` which is **contiguous** in row-major order, ensuring coalescence.  
+  - Then for warp 1 (threads 32-63), `i = 0 * blockDim.y + 1 = 1` and `j = 0 * blockDim.x + 0..31 = 0..31`, so threads 32-63 access `A[1][0..31]`, which is also contiguous, maintaining coalescence across warps.
+- Non-coalescent: 
+  ```cpp
+  int i = blockIdx.x * blockDim.x + threadIdx.x; // row index
+  int j = blockIdx.y * blockDim.y + threadIdx.y; // column index
+  ```
+  - For warp 0, `i = 0 * blockDim.x + 0..31 = 0..31` and `j = 0 * blockDim.y + 0 = 0`, so threads 0-31 access `A[0..31][0]`, which is **not contiguous** in row-major order, leading to poor coalescence.  
+  Then it **strides with a stride of 32** in the row dimension, causing each thread in the warp to access memory locations that are 32 rows apart, which is inefficient for coalescence.  
 
 
 
