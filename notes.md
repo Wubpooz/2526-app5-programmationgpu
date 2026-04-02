@@ -20,9 +20,9 @@
 
 &nbsp;  
 ## Architecture
-GPU architecture is SIMT (Single Instruction Multiple Threads) : a single instruction is executed by multiple threads in parallel. A GPU is made of multiple streaming multiprocessors (SMs), each made of 32 cores. In each SM we can only put up to 1024 threads. A thread is the execution of a kernel (GPU functions) on a core. It is identified by a `threadIdx.x`.     
+GPU architecture is **SIMT** (Single Instruction Multiple Threads): a single instruction is executed by multiple threads in parallel. A GPU is made of multiple streaming multiprocessors (**SMs**), each made of 32 cores. In each SM we can only put up to **1024 threads**. A thread is the execution of a kernel (GPU functions) on a core. It is identified by a `threadIdx.x`.     
 A block is the execution of a kernel (GPU functions) on a SM. It is identified by a `blockIdx.x`.  
-
+GPU supports **speculative execution**, which means that it can execute instructions out of order to hide memory latency. It also supports warp divergence, which means that if threads in a warp (group of 32 threads) take different execution paths, they will be executed sequentially, which can lead to performance degradation (a if on `threadIdx.x % 2 == 0` causes divergence and **multiples the execution time** but on `threadIdx.x < SIZE /2` does not).
 
 ---
 
