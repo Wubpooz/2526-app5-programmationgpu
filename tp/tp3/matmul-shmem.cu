@@ -23,10 +23,32 @@ float *dA, *dB, *dC;
 // accumulate on C on registers, then continue with the rest of the tiles
 __global__ void multiplyMatrixGPUByBlocksThreads2DNonMultipleSharedMemory(float *dA, float *dB, float *dC, int n)
 {
-  // TODO / A FAIRE ...
   __shared__ float shA[BSXY][BSXY];
   __shared__ float shB[BSXY][BSXY];
   float c = 0.0;
+
+  int i = blockIdx.y * BSXY + threadIdx.y;
+  int j = blockIdx.x * BSXY + threadIdx.x;
+
+  if (i >= n || j >= n) {
+    return;
+  }
+
+  for (int tile = 0; tile < (n + BSXY - 1) / BSXY; tile++) {
+    int tiledColA = tile * BSXY + threadIdx.x;
+    int tiledRowB = tile * BSXY + threadIdx.y;
+
+    shA[threadIdx.y][threadIdx.x] = (i < n && tiledColA < n) ? dA[i * n + tiledColA] : 0.0f;
+    shB[threadIdx.y][threadIdx.x] = (tiledRowB < n && j < n) ? dB[tiledRowB + j * n] : 0.0f;
+
+    __syncthreads();
+
+    for (int k = 0; k < BSXY; k++) {
+      c += shA[threadIdx.y][k] * shB[k][threadIdx.x];
+    }
+
+    __syncthreads();
+  }
 }
 
 
@@ -76,27 +98,47 @@ int main(int argc, char **argv)
   }
 
   // Allocate dA and dB, then copy the arrays A and B to the GPU
-  // TODO / A FAIRE ...
+  cudaMalloc((void **)&dA, N * N * sizeof(float));
+  cudaMalloc((void **)&dB, N * N * sizeof(float));
+  cudaMalloc((void **)&dC, N * N * sizeof(float));
+  cudaMemcpy(dA, A, N * N * sizeof(float), cudaMemcpyHostToDevice);
+  cudaMemcpy(dB, B, N * N * sizeof(float), cudaMemcpyHostToDevice);
 
 
   // Call each GPU kernel appropriately to multiply matrices A and B
   // Measure and print the execution time and performance (GFlops/s) of each kernel, without counting the data transfer time
-  // TODO / A FAIRE ...
   {
     dim3 dimGrid;
     dim3 dimBlock;
-    dimBlock.x = 32;
-    dimBlock.y = 32;
+    dimBlock.x = BSXY;
+    dimBlock.y = BSXY;
     dimBlock.z = 1;
-    dimGrid.x = (N + 31) / 32;
-    dimGrid.y = (N + 31) / 32;
+    dimGrid.x = (N + BSXY - 1) / BSXY;
+    dimGrid.y = (N + BSXY - 1) / BSXY;
     dimGrid.z = 1;
-    // multiplyMatrixGPUByBlocksThreads2DNonMultipleSharedMemory<<<dimGrid, dimBlock>>>(N);
+    
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    
+    cudaEventRecord(start);
+    multiplyMatrixGPUByBlocksThreads2DNonMultipleSharedMemory<<<dimGrid, dimBlock>>>(dA, dB, dC, N);
+    cudaEventRecord(stop);
+    
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    
+    float gflops = (2.0f * N * N * N) / (milliseconds * 1e6);
+    std::cout << "Kernel execution time: " << milliseconds << " ms" << std::endl;
+    std::cout << "Performance: " << gflops << " GFlops/s" << std::endl;
+    
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
   }
 
   // Copy the array dC back to the CPU
-  // TODO / A FAIRE ...
-
+  cudaMemcpy(C, dC, N * N * sizeof(C[0]), cudaMemcpyDeviceToHost);
   // Verify the results
   multiplyMatrixCPU();
   verifyResults();
@@ -105,7 +147,7 @@ int main(int argc, char **argv)
   free(A); free(B); free(C);
 
   // Deallocate dA, dB, dC
-  // TODO / A FAIRE ...
+  cudaFree(dA); cudaFree(dB); cudaFree(dC);
 
   return 0;
 }
