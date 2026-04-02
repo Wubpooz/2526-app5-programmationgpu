@@ -27,6 +27,26 @@
 float *A;
 float *Aavg;
 
+float *dA, *dAavg;
+
+
+void ninePointAverage1DGrid(float *dA, float *dAavg, int n) {
+  int i = blockIdx.x + 1;
+  int j = blockIdx.y + 1;
+
+  if (i < n - 1 && j < n - 1) {
+    dAavg[i + j * n] = (dA[i - 1 + (j - 1) * n] + dA[i - 1 + (j) * n] + dA[i - 1 + (j + 1) * n] +
+        dA[i + (j - 1) * n] + dA[i + (j) * n] + dA[i + (j + 1) * n] +
+        dA[i + 1 + (j - 1) * n] + dA[i + 1 + (j) * n] + dA[i + 1 + (j + 1) * n]) * (1.0 / 9.0);
+  }
+}
+void ninePointAverage2DGrid1DBlock(float *dA, float *dAavg, int n) {}
+void ninePointAverage2DGrid2DBlock(float *dA, float *dAavg, int n) {}
+void ninePointAverage2DGrid2DBlockShared(float *dA, float *dAavg, int n) {}
+void ninePointAverage2DGrid2DBlockSharedKElements(float *dA, float *dAavg, int n) {}
+
+
+
 // Reference CPU implementation
 void ninePointAverageCPU(const float *A, float *Aavg)
 {
@@ -50,8 +70,30 @@ int main() {
     }
   }
 
-  free(A);
-  free(Aavg);
+  cudaMalloc((void **)&dA, N * N * sizeof(float));
+  cudaMalloc((void **)&dAavg, N * N * sizeof(float));
+  cudaMemcpy(dA, A, N * N * sizeof(float), cudaMemcpyHostToDevice);
+
+  {
+    dim3 dimGrid;
+    dim3 dimBlock;
+    dimBlock.x = BSXY;
+    dimBlock.y = BSXY;
+    dimBlock.z = 1;
+    dimGrid.x = (N + BSXY - 1) / BSXY;
+    dimGrid.y = (N + BSXY - 1) / BSXY;
+    dimGrid.z = 1;
+
+    ninePointAverage1DGrid<<<dimGrid, dimBlock>>>(dA, dAavg, N);
+  }
+
+  cudaMemcpy(Aavg, dAavg, N * N * sizeof(Aavg[0]), cudaMemcpyDeviceToHost);
+
+  ninePointAverageCPU();
+  verifyResults();
+
+  free(A); free(Aavg);
+  cudaFree(dA); cudaFree(dAavg);
 
   return 0;
 }
