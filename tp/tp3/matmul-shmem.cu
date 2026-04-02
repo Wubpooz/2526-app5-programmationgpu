@@ -7,12 +7,9 @@
 
 // A and C are stored by rows, i.e., A(i, j) = A[i * N + j], C(i, j) = C[i * N + j]
 // B is stored by columns, i.e., B(i, j) = B[i + j * N]
-// A et C sont stockes par lignes, a savoir A(i, j) = A[i * N + j], C(i, j) = C[i * N + j]
-// B est stocke par colonne, a savoir B(i, j) = B[i + j * N]
 float *A, *B, *C;
 
 // dA and dC are stored by rows, dC is stored by columns
-// dA et dC sont stockes par lignes, dC est stocke par colonne
 float *dA, *dB, *dC;
 
 
@@ -24,15 +21,6 @@ float *dA, *dB, *dC;
 // Accumulate on BSXY * BSXY registers for a tile of C. That is, in each step,
 // read a BSXY * BSXY tile of A and B on shared memory, multiply them and
 // accumulate on C on registers, then continue with the rest of the tiles
-//
-// Utiliser BSXY == blockDim.x == blockDim.y (blocs carres) dans cet exercice
-// Creer un bloc pour le calcul de BSXY * BSXY elements de C, calculer avec BSXY * BSXY threads par bloc.
-// Chaque thread calcule un element de C.
-// Faire marcher pour N n'est pas multiple de ni BSXY;
-// Operer par des tuiles de matrices de taille BSXY * BSXY en utilisant la shared memory.
-// Accumuler sur BSXY * BSXY registre pour une tuile de C. A savoir, a chaque
-// etape, recuperer une tuile de taille BSXY * BSXY de A et B, multiplier-les,
-// puis passer aux tuiles suivants
 __global__ void multiplyMatrixGPUByBlocksThreads2DNonMultipleSharedMemory(float *dA, float *dB, float *dC, int n)
 {
   // TODO / A FAIRE ...
@@ -43,7 +31,6 @@ __global__ void multiplyMatrixGPUByBlocksThreads2DNonMultipleSharedMemory(float 
 
 
 // Reference CPU code for multipying matrices C = AB (A, C stored by rows, B stored by columns)
-// Code reference de CPU pour effectuer la multiplication de matrices C = AB (A, C stockes par ligne, B stocke par colonne)
 void multiplyMatrixCPU()
 {
   for (int i = 0; i < N; i++) {
@@ -78,7 +65,6 @@ void verifyResults()
 int main(int argc, char **argv)
 {
   // Initialization
-  // Initialisation
   A = (float *)malloc(N * N * sizeof(A[0]));
   B = (float *)malloc(N * N * sizeof(B[0]));
   C = (float *)malloc(N * N * sizeof(C[0]));
@@ -90,14 +76,11 @@ int main(int argc, char **argv)
   }
 
   // Allocate dA and dB, then copy the arrays A and B to the GPU
-  // Allouer dA et dB, puis copier les tableaux A et B vers le GPU
   // TODO / A FAIRE ...
 
 
   // Call each GPU kernel appropriately to multiply matrices A and B
   // Measure and print the execution time and performance (GFlops/s) of each kernel, without counting the data transfer time
-  // Appeler chaque kernel GPU de maniere appropriee pour multiplier les matrices A et B
-  // Mesurer et afficher le temps d'execution et la performance (en GFlops/s) de chaque kernel, sans compter le temps de transfert.
   // TODO / A FAIRE ...
   {
     dim3 dimGrid;
@@ -112,20 +95,16 @@ int main(int argc, char **argv)
   }
 
   // Copy the array dC back to the CPU
-  // Recopier le tableau dC vers le CPU
   // TODO / A FAIRE ...
 
   // Verify the results
-  // Verifier les resultats
-  // multiplyMatrixCPU();
+  multiplyMatrixCPU();
   verifyResults();
 
   // Deallocate A, B, C
-  // Desallouer A, B, C
   free(A); free(B); free(C);
 
   // Deallocate dA, dB, dC
-  // Desallouer dA, dB, dC
   // TODO / A FAIRE ...
 
   return 0;
