@@ -35,7 +35,7 @@ It can be compiled and run in [Godbolt](https://godbolt.org/).
 &nbsp;  
 ### Multi-dimensional grids/blocks and coalescence
 `dim3` is a structure that represents the dimensions of a grid or a block. It has three members: `x`, `y`, and `z`. By default, they are all set to 1.  
-It is used to s**pecify the number of blocks and threads in each dimension** when launching a kernel. For example, `dim3 blockSize(256);` or `dim3 grid(256, 1, 1);` means that each block will have 256 threads in the x-dimension, and 1 thread in the y and z dimensions. The total number of threads per block is `blockSize.x * blockSize.y * blockSize.z`.  
+It is used to **specify the number of blocks and threads in each dimension** when launching a kernel. For example, `dim3 blockSize(256);` or `dim3 grid(256, 1, 1);` means that each block will have 256 threads in the x-dimension, and 1 thread in the y and z dimensions. The total number of threads per block is `blockSize.x * blockSize.y * blockSize.z`.  
 
 &nbsp;  
 When launching a kernel, we can **specify the number of blocks and the number of threads per block** using the syntax `kernel<<<numBlocks, numThreadsPerBlock>>>(args)`. The total number of threads launched will be `numBlocks * numThreadsPerBlock`.    
