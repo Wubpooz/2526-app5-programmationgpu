@@ -170,4 +170,4 @@ All are initialized to 0 by default.
 
 
 #### Synchronization
-- `__syncthreads()`: synchronizes all threads in a block. It ensures that all threads have reached this point before any thread continues. It is used to avoid race conditions
+- `__syncthreads()`: synchronizes all threads in a block. It ensures that all threads have reached this point before any thread continues. It is used to avoid race conditions. **Threads in a warp are always in sync**, it's only useful for synchronizing threads across warps in the same block. It does not synchronize threads across different blocks.
