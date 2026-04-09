@@ -42,6 +42,66 @@ __global__ void findMinimum(float *dA, float *dAmin, int N)
   }
 }
 
+template <int BLOCK_SIZE>
+__global__ void findMinimumOptimized(float *dA, float *dAmin, int N)
+{
+  __shared__ volatile float buff[BLOCK_SIZE > 64 ? BLOCK_SIZE : 64];
+  int idx = threadIdx.x + blockIdx.x * BLOCK_SIZE;
+  int tid = threadIdx.x;
+
+  if (idx < N) {
+    buff[tid] = dA[idx];
+  } else {
+    buff[tid] = FLT_MAX;
+  }
+  __syncthreads();
+
+  if (BLOCK_SIZE > 512 && tid < 512) {
+    buff[tid] = fminf(buff[tid], buff[tid + 512]);
+  }
+  __syncthreads();
+
+  if (BLOCK_SIZE > 256 && tid < 256) {
+    buff[tid] = fminf(buff[tid], buff[tid + 256]);
+  }
+  __syncthreads();
+
+  if (BLOCK_SIZE > 128 && tid < 128) {
+    buff[tid] = fminf(buff[tid], buff[tid + 128]);
+  }
+  __syncthreads();
+
+  if (BLOCK_SIZE > 64 && tid < 64) {
+    buff[tid] = fminf(buff[tid], buff[tid + 64]);
+  }
+  __syncthreads();
+
+  if (tid < 32) {
+    if (BLOCK_SIZE > 32) {
+      buff[tid] = fminf(buff[tid], buff[tid + 32]);
+    }
+    if (BLOCK_SIZE > 16) {
+      buff[tid] = fminf(buff[tid], buff[tid + 16]);
+    }
+    if (BLOCK_SIZE > 8) {
+      buff[tid] = fminf(buff[tid], buff[tid + 8]);
+    }
+    if (BLOCK_SIZE > 4) {
+      buff[tid] = fminf(buff[tid], buff[tid + 4]);
+    }
+    if (BLOCK_SIZE > 2) {
+      buff[tid] = fminf(buff[tid], buff[tid + 2]);
+    }
+    if (BLOCK_SIZE > 1) {
+      buff[tid] = fminf(buff[tid], buff[tid + 1]);
+    }
+  }
+
+  if (tid == 0) {
+    dAmin[blockIdx.x] = buff[0];
+  }
+}
+
 int main()
 {
   srand(1234);
@@ -72,20 +132,6 @@ int main()
   findMinimum<<<numBlocks, BLOCKSIZE>>>(dA, dAmin, N);
   findMinimum<<<1, BLOCKSIZE>>>(dAmin, dAmin, numBlocks); // On peut faire un second appel pour reduire la taille de l'array a N/(BLOCKSIZE*BLOCKSIZE)
   cudaMemcpy(Amin, dAmin, numBlocks * sizeof(float), cudaMemcpyDeviceToHost);
-
-  // int currentN = numBlocks;
-  // float *currentIn = dAmin;
-  // float *currentOut = dAtemp;
-
-  // while (currentN > 1) {
-  //   int blocks = (currentN + BLOCKSIZE - 1) / BLOCKSIZE;
-  //   findMinimum<<<blocks, BLOCKSIZE>>>(currentIn, currentOut, currentN);
-  //   CUDA_CHECK(cudaGetLastError());
-  //   CUDA_CHECK(cudaDeviceSynchronize());
-
-  //   currentN = blocks;
-  //   swap(currentIn, currentOut);
-  // }
 
   // Final CPU reduction
   minA = *std::min_element(Amin, Amin + numBlocks);
