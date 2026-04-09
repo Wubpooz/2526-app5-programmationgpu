@@ -36,8 +36,8 @@ int main()
   float *A, *dA; // Le tableau dont minimum on va chercher
   float *Amin, *dAmin; // Amin contiendra en suite le tableau reduit par un facteur de BLOCKSIZE apres l'execution du kernel GPU
 
-  // Allocate arrays A[N] and Amin[numBlocks} on the CPU
-  // Allocate arrays dA[N] and dAmin[numBlocks} on the GPU
+  // Allocate arrays A[N] and Amin[numBlocks] on the CPU
+  // Allocate arrays dA[N] and dAmin[numBlocks] on the GPU
   // Allour les tableaux A[N] et Amin[numBlocks] sur le CPU
   // Allouer les tableaux dA[N] et dAmin[numBlocks] sur le GPU
   // TODO / A FAIRE ...
