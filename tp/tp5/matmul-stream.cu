@@ -42,7 +42,14 @@ void verify_result(float *A, float *B, float *C, int N) {
 // A is row-major (stored row-by-row in memory)
 __global__ void matvec(float *A, float *x, float *b, int n)
 {
-  // TODO / A FAIRE ...
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i < n) {
+    float sum = 0.0f;
+    for (int j = 0; j < n; j++) {
+      sum += A[i * n + j] * x[j];
+    }
+    b[i] = sum;
+  }
 }
 
 int main()
@@ -72,16 +79,19 @@ int main()
     cudaStreamCreate(&streams[i]);
   }
 
+  dim3 threadsPerBlock(256);
+  dim3 numBlocks((N + threadsPerBlock.x - 1) / threadsPerBlock.x);
+
   // Compute the matrix-vector multiplication C(:, j) = A * B(:, j) column-by-column using nStreams streams
   for (int j = 0; j < N; j++) {
     // Copy the column j of B into one of slots in dB using the stream no (j % nStreams) and cudaMemcpyAsync
-    // TODO / A FAIRE ...
+    cudaMemcpyAsync(&dB[(j % nStreams) * N], &B[j * N], N * sizeof(float), cudaMemcpyHostToDevice, streams[j % nStreams]);
 
     // Perform the matrix-vector multiplication on A and the column vector in dB(:, j % nStreams), compute on dC(:, j % nStreams), using stream no (j % nStreams)
-    // TODO / A FAIRE ...
+    matvec<<<numBlocks, threadsPerBlock, 0, streams[j % nStreams]>>>(dA, &dB[(j % nStreams) * N], &dC[(j % nStreams) * N], N);
 
     // Copy back the computed vector dC(:, j % nStreams) into the column C(:, j) using the same stream no (j % nStreams) and cudaMemcpyAsync
-    // TODO / A FAIRE ...
+    cudaMemcpyAsync(&C[j * N], &dC[(j % nStreams) * N], N * sizeof(float), cudaMemcpyDeviceToHost, streams[j % nStreams]);
   }
   
   cudaDeviceSynchronize();
