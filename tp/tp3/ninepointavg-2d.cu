@@ -1,16 +1,10 @@
 /**
   * In this exercise, we will implement GPU kernels for computing the average of 9 points on a 2D array.
-  *
   * Kernel 1: Use 1D grid of blocks (only blockIdx.x), no additional threads (1 thread per block)
-  *
   * Kernel 2: Use 2D grid of blocks (blockIdx.x/.y), no additional threads (1 thread per block)
-  *
   * Kernel 3: Use 2D grid of blocks and 2D threads (BSXY x BSXY), each thread computing 1 element of Aavg
-  *
   * Kernel 4: Use 2D grid of blocks and 2D threads, each thread computing 1 element of Aavg, use shared memory. Each block should load BSXY x BSXY elements of A, then compute (BSXY - 2) x (BSXY - 2) elements of Aavg. Borders of tiles loaded by different blocks must overlap to be able to compute all elements of Aavg.
-  *
   * Kernel 5: Use 2D grid of blocks and 2D threads, use shared memory, each thread computes KxK elements of Aavg
-  *
   * For all kernels: Make necessary memory allocations/deallocations and memcpy in the main.
 */
 
@@ -30,20 +24,75 @@ float *Aavg;
 float *dA, *dAavg;
 
 
-void ninePointAverage1DGrid(float *dA, float *dAavg, int n) {
-  int i = blockIdx.x + 1;
-  int j = blockIdx.y + 1;
-
-  if (i < n - 1 && j < n - 1) {
-    dAavg[i + j * n] = (dA[i - 1 + (j - 1) * n] + dA[i - 1 + (j) * n] + dA[i - 1 + (j + 1) * n] +
-        dA[i + (j - 1) * n] + dA[i + (j) * n] + dA[i + (j + 1) * n] +
-        dA[i + 1 + (j - 1) * n] + dA[i + 1 + (j) * n] + dA[i + 1 + (j + 1) * n]) * (1.0 / 9.0);
+__global__ void ninePointAverage1DGrid(float *dA, float *dAavg, int n) {
+  if (threadIdx.x != 0 || threadIdx.y != 0 || threadIdx.z != 0) {
+    return;
   }
+
+  int interior = n - 2;
+  int idx = blockIdx.x + blockIdx.y * gridDim.x;
+  if (idx < 0 || idx >= interior * interior) {
+    return;
+  }
+
+  int i = 1 + (idx % interior);
+  int j = 1 + (idx / interior);
+  int base = i + j * n;
+
+  float sum = 0.0f;
+  sum += dA[(i - 1) + (j - 1) * n];
+  sum += dA[(i - 1) + j * n];
+  sum += dA[(i - 1) + (j + 1) * n];
+  sum += dA[i + (j - 1) * n];
+  sum += dA[i + j * n];
+  sum += dA[i + (j + 1) * n];
+  sum += dA[(i + 1) + (j - 1) * n];
+  sum += dA[(i + 1) + j * n];
+  sum += dA[(i + 1) + (j + 1) * n];
+
+  dAavg[base] = sum * (1.0f / 9.0f);
 }
-void ninePointAverage2DGrid1DBlock(float *dA, float *dAavg, int n) {}
-void ninePointAverage2DGrid2DBlock(float *dA, float *dAavg, int n) {}
-void ninePointAverage2DGrid2DBlockShared(float *dA, float *dAavg, int n) {}
-void ninePointAverage2DGrid2DBlockSharedKElements(float *dA, float *dAavg, int n) {}
+
+
+__global__ void ninePointAverage2DGrid1DBlock(float *dA, float *dAavg, int n) {
+  if (threadIdx.x != 0 || threadIdx.y != 0 || threadIdx.z != 0) {
+    return;
+  }
+
+  int interior = n - 2;
+  int i = 1 + blockIdx.x;
+  int j = 1 + blockIdx.y;
+  if (i >= n - 1 || j >= n - 1) {
+    return;
+  }
+
+  int base = i + j * n;
+  float sum = 0.0f;
+  sum += dA[(i - 1) + (j - 1) * n];
+  sum += dA[(i - 1) + j * n];
+  sum += dA[(i - 1) + (j + 1) * n];
+  sum += dA[i + (j - 1) * n];
+  sum += dA[i + j * n];
+  sum += dA[i + (j + 1) * n];
+  sum += dA[(i + 1) + (j - 1) * n];
+  sum += dA[(i + 1) + j * n];
+  sum += dA[(i + 1) + (j + 1) * n];
+
+  dAavg[base] = sum * (1.0f / 9.0f);
+}
+
+
+void ninePointAverage2DGrid2DBlock(float *dA, float *dAavg, int n) {
+
+}
+
+void ninePointAverage2DGrid2DBlockShared(float *dA, float *dAavg, int n) {
+
+}
+
+void ninePointAverage2DGrid2DBlockSharedKElements(float *dA, float *dAavg, int n) {
+
+}
 
 
 
